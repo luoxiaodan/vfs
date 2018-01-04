@@ -21,6 +21,7 @@ public class SlaveServer {
 	* 初始化socket服务
 	*/
 	public static String signObj=null;
+	public static String signWork="end";
 	private static Slave slave=new Slave();
 	public static void main(String[] args) throws IOException {    
 		SlaveServer slaveServer=new SlaveServer();
@@ -46,18 +47,18 @@ public class SlaveServer {
 	private void createMessage() {
 	try {
 		System.out.println("waiting for client : ");
-		// 使用accept()阻塞等待客户请求
+	
 		Socket socket = server.accept();
 		System.out.println("client socketPort : " + socket.getPort());
-		// 开启一个子线程来等待另外的socket加入
+		
 		new Thread(new Runnable() {
 			public void run() {
 			    createMessage();
 		}
 	}).start();
-	// 向客户端发送信息
+	
 	OutputStream output = socket.getOutputStream();
-	// 从客户端获取信息
+	
 	
 	BufferedReader bff = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
     	// Scanner scanner = new Scanner(socket.getInputStream());
@@ -97,10 +98,12 @@ public class SlaveServer {
 			   Thread.sleep(500);
 			   System.out.println("context signObj :"+line+" "+signObj);
 			   if(signObj.equals(line+":"+socket.getPort())){
+				    
 				    System.out.println("to do obj");
 				   
-				    responesClient(socket,"OK");
+				    
 	        		String[] Info=signObj.split(":");
+	        		responesClient(socket,Info[0]);
 	        		switch (Integer.valueOf(Info[0])) {
 	                case VSFProtocols.WRITE_CHUNK:
 	                    writeChunk(socket);
@@ -163,6 +166,7 @@ public class SlaveServer {
             	
             	  
                   boolean stateWruteChunk=slave.writeChunk(Integer.valueOf(chunkid),Integer.valueOf(offsetBuff),Integer.valueOf(lenBuff),contentBuff);
+                  signWork="end";
                   DataOutputStream out = new DataOutputStream(socket.getOutputStream());    
                   
                   if(stateWruteChunk){

@@ -28,9 +28,9 @@ public class Slave {
 	
 	public Slave(){};
 	public void IniSalve() throws IOException{
-		String result=null;
-		String filePath="E:\\testlog.txt";	
-		File fileName = new File(filePath);
+		
+		
+		File fileName = new File(CHUNK_LOG);
 		if(fileName.exists()){  
 		      FileReader fileReader=null;  
 		      BufferedReader bufferedReader=null;  
@@ -40,7 +40,7 @@ public class Slave {
 		          try{  
 		              String read="";  
 		              while((read=bufferedReader.readLine())!=null){  
-		              System.out.println("line£º"+"\r\n"+read);  
+		           //   System.out.println("line£º"+"\r\n"+read);  
 		              String[] Info=read.split(" ");
 		              ChunkInfo chunkInfo=new ChunkInfo(Integer.valueOf(Info[0]),Info[1],Integer.valueOf(Info[2]),Integer.valueOf(Info[3]),Integer.valueOf(Info[4]));
 		             chunkInfoList.add(chunkInfo);
