@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -12,8 +13,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import struct.ChunkInfo;
 
 public class Slave {
@@ -81,7 +82,7 @@ public class Slave {
 			obj.put("port", chunkInfo.port);
 			obj.put("file_index", chunkInfo.fileIndex);
 			obj.put("chunk_left", chunkInfo.chunkLeft);
-			chunkArray.add(obj);
+			chunkArray.put(obj);
 			
 			//String Info=chunkInfo.chunkId+" "+chunkInfo.slaveIP+" "+chunkInfo.port+" "+chunkInfo.fileIndex+" "+chunkInfo.chunkLeft+"\n";
 			//System.out.println(Info);
@@ -113,7 +114,7 @@ public class Slave {
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);
 			if (chunkInfo.chunkId==chunkid){
-				String result=null;
+				
 				String contentPath="E:\\content"+Integer.toString(chunkid);
 				File fileName = new File(contentPath);
 				if(fileName.exists()){  
@@ -146,11 +147,9 @@ public class Slave {
 		    fileName.createNewFile();  
 		    System.out.println("CreateFile"+contentPath);
 		   }  
-		   
-		   BufferedWriter output = new BufferedWriter(new FileWriter(fileName,true));  
-         		   
-		   output.write(content);  
-           output.close(); 
+		   FileOutputStream write = new FileOutputStream(contentPath);		           
+	       write.write(content.getBytes(),offset,writeLen);
+	       write.close(); 
 		   
 		   
 		  }catch(Exception e){  
@@ -175,7 +174,7 @@ public class Slave {
 			  File fileName = new File(CHUNK_LOG);
 		   if(!fileName.exists()){  
 		    fileName.createNewFile();  
-		    System.out.println("CreateFile"+filePath);
+		    System.out.println("CreateFile"+CHUNK_LOG);
 		   }  
 		   
 		   BufferedWriter output = new BufferedWriter(new FileWriter(fileName,true));  

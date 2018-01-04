@@ -10,8 +10,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import func.Slave;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import struct.VSFProtocols;
 
 public class SlaveServer {
@@ -225,7 +225,7 @@ public class SlaveServer {
     	responesClient(socket,"1004");
     }
     
-    public void createChunk(Socket socket) throws IOException{
+    public void createChunk(Socket socket) throws Exception{
     	OutputStream out = socket.getOutputStream();
     	BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		JSONObject chunk = new JSONObject(in.readLine());////================error
