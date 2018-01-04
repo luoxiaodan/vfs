@@ -158,7 +158,7 @@ public class Slave {
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);
 			if (chunkInfo.chunkId==chunkid){
-				chunkInfo.fileIndex=CHUNK_SIZE-chunkInfo.chunkLeft;
+				
 				chunkInfo.chunkLeft-=writeLen;
 				
 				return true;
