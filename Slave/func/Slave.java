@@ -62,12 +62,13 @@ public class Slave {
 	}
 
 	
-	public void CreateChunk(JSONObject chunk) throws Exception{
+	public boolean CreateChunk(JSONObject chunk) throws Exception{
 		
 		ChunkInfo chunkInfo=new ChunkInfo(chunk.getInt("chunk_id"), chunk.getString("slave_ip"),
 				chunk.getInt("port"), chunk.getInt("file_index"), chunk.getInt("chunk_left"));
 		chunkInfoList.add(chunkInfo);
 		this.writeChunkLog(chunkInfo);
+		return true;
 	}
 	
 	
@@ -83,22 +84,23 @@ public class Slave {
 			obj.put("file_index", chunkInfo.fileIndex);
 			obj.put("chunk_left", chunkInfo.chunkLeft);
 			chunkArray.put(obj);
-			
-			//String Info=chunkInfo.chunkId+" "+chunkInfo.slaveIP+" "+chunkInfo.port+" "+chunkInfo.fileIndex+" "+chunkInfo.chunkLeft+"\n";
-			//System.out.println(Info);
+		
 		}
 		return chunkArray;
 	}
 	
 	
-	public void deleteChunk(int chunkid) throws Exception{
+	public boolean deleteChunk(int chunkid) throws Exception{
+		boolean flag=false;
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);
 			if (chunkInfo.chunkId==chunkid){
 				chunkInfoList.remove(i);
-				break;//////////////////////
+				flag=true;
+				break;
 			}
 		}
+		if(flag){
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);			
 			 File fileName = new File(CHUNK_LOG);
@@ -107,10 +109,12 @@ public class Slave {
 			   }
 			this.writeChunkLog(chunkInfo);
 		}
+		}
+		return flag;
 		
 	}
 	public byte[] readChunk(int chunkid,int offset,int readLen) throws IOException{
-		byte[] buffer = new byte[(int) DOWNLOAD_BUFFER_SIZE]; 
+		byte[] buffer = new byte[readLen]; 
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);
 			if (chunkInfo.chunkId==chunkid){
@@ -118,17 +122,11 @@ public class Slave {
 				String contentPath="E:\\content"+Integer.toString(chunkid);
 				File fileName = new File(contentPath);
 				if(fileName.exists()){  
-					FileInputStream file = new FileInputStream(contentPath);  
+					FileInputStream in = new FileInputStream(contentPath);  
 			         			        
-			        int numRead = 0; 
-			        	        
-			        
-			        while (offset < buffer.length  
-			        && (numRead = file.read(buffer, readLen, buffer.length - readLen)) >= 0) {  
-			            offset += numRead;  
-			        }  		         
+					 in.read(buffer,offset,readLen);	         
 			          
-			        file.close();  
+			        in.close();  
 			        
 				}
 				break;
@@ -139,7 +137,7 @@ public class Slave {
 	
 	
 	public  boolean writeChunk(int chunkid,int offset,int writeLen,String content){
-		
+		boolean flag=false;
 		String contentPath="E:\\content"+Integer.toString(chunkid);
 		try{  
 			  File fileName = new File(contentPath);
@@ -147,9 +145,10 @@ public class Slave {
 		    fileName.createNewFile();  
 		    System.out.println("CreateFile"+contentPath);
 		   }  
-		   FileOutputStream write = new FileOutputStream(contentPath);		           
-	       write.write(content.getBytes(),offset,writeLen);
-	       write.close(); 
+		   FileOutputStream out = new FileOutputStream(contentPath);	
+		   		    		
+	       out.write(content.getBytes(),offset,writeLen);
+	       out.close(); 
 		   
 		   
 		  }catch(Exception e){  
@@ -161,11 +160,12 @@ public class Slave {
 				
 				chunkInfo.chunkLeft-=writeLen;
 				
-				return true;
+				flag=true;
+				break;
 			}
-			return false;
+			
 		}
-		return false;
+		return flag;
 	}
 	
 	public  void writeChunkLog(ChunkInfo chunkInfo)throws Exception{  

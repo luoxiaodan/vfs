@@ -34,8 +34,8 @@ public class PushBlockQueueHandler implements Runnable {
         SlaveServer.signObj=(String)obj;
         SlaveServer.signWork="begin";
         while(!SlaveServer.signWork.equals("end")){
-        	System.out.println("waitin");
-        	Runtime.getRuntime().exec("cmd /c dir \\windows").waitFor();
+        	System.out.println("waiting");
+        	
         }
     }
 

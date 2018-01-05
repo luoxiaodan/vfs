@@ -57,12 +57,8 @@ public class SlaveServer {
 		}
 	}).start();
 	
-	OutputStream output = socket.getOutputStream();
-	
-	
 	BufferedReader bff = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
     	// Scanner scanner = new Scanner(socket.getInputStream());
-
 		String line = "";
 		// accept this socket message
 		while (true) {
@@ -75,17 +71,17 @@ public class SlaveServer {
 				   PushBlockQueue.getInstance().put(line+":"+socket.getPort());
 			   }else{
 				   
-				   if(line.equals(String.valueOf(1002))){ //master   
+				   if(line.equals(VSFProtocols.INITIALIZE_CHUNK_INFO)||line.equals(VSFProtocols.NEW_CHUNK)||line.equals(VSFProtocols.RELEASE_CHUNK)){ //master   
 					  
 					   switch (Integer.valueOf(line)) {
-		                case 1002://chunkinfo
+		                case VSFProtocols.INITIALIZE_CHUNK_INFO://chunkinfo
 		                    getChunkInfo(socket);
 		                    break;
 
-		                case 1003://createchunk
+		                case VSFProtocols.NEW_CHUNK://createchunk
 		                    createChunk(socket);
 		                    break;	
-		                case 1004:
+		                case VSFProtocols.RELEASE_CHUNK:
 		                	deleteChunk(socket);
 		                	break;
 		                }					   
@@ -98,9 +94,7 @@ public class SlaveServer {
 			   Thread.sleep(500);
 			   System.out.println("context signObj :"+line+" "+signObj);
 			   if(signObj.equals(line+":"+socket.getPort())){
-				    
-				    System.out.println("to do obj");
-				   
+				  
 				    
 	        		String[] Info=signObj.split(":");
 	        		responesClient(socket,Info[0]);
@@ -130,73 +124,49 @@ public class SlaveServer {
 	public void writeChunk(Socket socket) throws IOException{
 		  
             
-            DataInputStream input = new DataInputStream(socket.getInputStream());  
+              DataInputStream input = new DataInputStream(socket.getInputStream());  
+      	      int chunkid = inputInt(socket);//chunk_id        	  
+        	  int offset= inputInt(socket);//offset       	  
+        	  int writelen = inputInt(socket);//writelen
+        	  String contentBuff="";
+       	 
+        	  //content
+        	  int contentCount = 0;
+        	  byte[] tempBuf = new byte[Slave.UPLOAD_BUFFER_SIZE];
+          	
+          	  while(true){
+          		if(contentCount >= writelen){
+          			break;
+          		}
+          		int cRead = Math.min(writelen - contentCount, tempBuf.length);
+          		int aRead = input.read(tempBuf, 0, cRead);          			
+          			contentBuff+= new String(tempBuf);        		
+          		    contentCount += aRead;
+          	}
+        	
+        	  
+              boolean stateWruteChunk=slave.writeChunk(chunkid,offset,writelen,contentBuff);
+              signWork="end";              
+              responseStatus(socket,stateWruteChunk);
             
-            
-            	  System.out.println("write Chunk"); 
-            	  byte[] chunkids = new byte[64];
-            	  input.read(chunkids, 0, 64);
-            	  String chunkid = new String(chunkids);//chunk_id
-            	  
-            	  byte[] offsetBuffs = new byte[64];
-            	  input.read(offsetBuffs, 0, 64);
-            	  String offsetBuff = new String(offsetBuffs);//offset
-            	  
-            	  byte[] lenBuffs = new byte[64];
-            	  input.read(lenBuffs, 0, 64);
-            	  String lenBuff = new String(lenBuffs);//writelen
-            	  String contentBuff="";
-            	 
-            	  //content
-            	  int contentCount = 0;
-            	  byte[] tempBuf = new byte[Slave.UPLOAD_BUFFER_SIZE];
-              	
-              	  while(true){
-              		if(contentCount >= Integer.valueOf(lenBuff)){
-              			break;
-              		}
-              		int cRead = Math.min(Integer.valueOf(lenBuff) - contentCount, tempBuf.length);
-              		int aRead = input.read(tempBuf, 0, cRead);
-              		
-    	
-              			contentBuff+= new String(tempBuf);
-              		
-              		contentCount += aRead;
-              	}
-            	
-            	  
-                  boolean stateWruteChunk=slave.writeChunk(Integer.valueOf(chunkid),Integer.valueOf(offsetBuff),Integer.valueOf(lenBuff),contentBuff);
-                  signWork="end";
-                  DataOutputStream out = new DataOutputStream(socket.getOutputStream());    
-                  
-                  if(stateWruteChunk){
-                	  out.writeUTF("write Chunk successfully"); 
-                     
-                  }else{
-                	  out.writeUTF("write Chunk error"); 
-                  }
-                  out.close();
 	
 	}
 
     public void readChunk(Socket socket) throws NumberFormatException, IOException{
-    	  DataInputStream input = new DataInputStream(socket.getInputStream());  
+	        DataOutputStream out = new DataOutputStream(socket.getOutputStream());				    
+	        int chunkid = inputInt(socket);//chunk_id        	  
+      	    int offset= inputInt(socket);//offset       	  
+      	    int readlen = inputInt(socket);//readlen
+		    byte[] content=slave.readChunk(chunkid,offset,readlen);		    				
+		    responesClient(socket,"OK");
           
-    	  System.out.println("read chunk");               	  
-          String chunkid = input.readUTF();//chunk_id
-	      String offsetBuff = input.readUTF();//offset
-	      String lenBuff = input.readUTF();//readlen
-	      byte[] content=slave.readChunk(Integer.valueOf(chunkid),Integer.valueOf(offsetBuff),Integer.valueOf(lenBuff));
-	    
+            out.writeInt(readlen);
 	      
-	      responesClient(socket,"OK");
-        
-            OutputStream out = socket.getOutputStream();
-			int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
+	    	int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
 			byte[] contentBuff = new byte[bufferSize];
 			int contentCount = 0;
-			while(contentCount < Integer.valueOf(lenBuff)){
-				int writeNum = Math.min(bufferSize, Integer.valueOf(lenBuff)-contentCount);
+			while(contentCount < readlen){
+				int writeNum = Math.min(bufferSize, readlen-contentCount);
 				for(int i = 0; i < bufferSize; ++i){
 					contentBuff[i] = content[contentCount+i];
 				}
@@ -204,54 +174,67 @@ public class SlaveServer {
 				out.flush();
 				
 				contentCount += writeNum;
-			}   
-             
-	     
+			}               
 	        out.close(); 
     }
     
     public void getChunkInfo(Socket socket) throws IOException{
-    	OutputStream out = socket.getOutputStream();
+    	DataOutputStream out = new DataOutputStream(socket.getOutputStream());
     	JSONArray chunkarray=slave.getChunkList();
     	String string=chunkarray.toString();
         
         byte[] bytes=string.getBytes();
        
-        out.write(bytes);
-        out.flush();
+        out.writeInt(bytes.length);
+		out.write(bytes, 0, bytes.length);
         out.close();
     }
     
     public void deleteChunk(Socket socket) throws NumberFormatException, Exception{
     	//doing
     	BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-    	slave.deleteChunk(Integer.valueOf(in.readLine()));
-    	responesClient(socket,"1004");
+    	boolean stateWruteChunk=slave.deleteChunk(Integer.valueOf(in.readLine()));
+    	responseStatus(socket,stateWruteChunk);
     }
     
     public void createChunk(Socket socket) throws Exception{
-    	OutputStream out = socket.getOutputStream();
-    	BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		JSONObject chunk = new JSONObject(in.readLine());////================error
-		slave.CreateChunk(chunk);
-		
-        String string=chunk.toString();
+        DataOutputStream out = new DataOutputStream(socket.getOutputStream());    
+        DataInputStream input = new DataInputStream(socket.getInputStream());
+        int length = input.readInt();
+    	byte[] bytes = new byte[length];
+    	input.read(bytes, 0, length);
+    	
+        JSONObject chunk = new JSONObject(new String(bytes));
+		boolean stateWruteChunk=slave.CreateChunk(chunk);
+		responseStatus(socket,stateWruteChunk);
         
-        byte[] bytes=string.getBytes();
-       
-        out.write(bytes);
-        out.flush();
-        out.close();
     }
     
     public void responesClient(Socket socket,String content) throws IOException{
-    	 OutputStream out = socket.getOutputStream();
- 		
- 		// response to client	        		
- 		byte[] response = ("content".getBytes());	        		
- 		out.write(response, 0, response.length);
- 		out.flush();
- 		System.out.println("response to client: " + response);
- 		out.close();
+    	   DataOutputStream out = new DataOutputStream(socket.getOutputStream());    
+    	   out.writeUTF(content);
+		   System.out.println("response to client: " + content);
+ 		   out.close();
     }
+    
+    public void responseStatus(Socket socket,boolean check) throws IOException{
+    	if(check){
+      	  responesClient(socket,VSFProtocols.MESSAGE_OK); 
+           
+        }else{
+      	  responesClient(socket,VSFProtocols.MASTER_REJECT); 
+        }
+    }
+    public  int inputInt(Socket socket) throws IOException {		
+    	return Integer.valueOf(inputString(socket));
+	}
+    public  String inputString(Socket socket) throws IOException {
+		DataInputStream input = new DataInputStream(socket.getInputStream());
+		int length = input.readInt();
+    	byte[] bytes = new byte[length];
+    	input.read(bytes, 0,length);
+    	return new String(bytes);
+	}
+
+    
 }
