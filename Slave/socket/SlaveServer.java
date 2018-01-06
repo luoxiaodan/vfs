@@ -157,8 +157,14 @@ public class SlaveServer {
 			byte[] content = slave.readChunk(chunkid, offset, readlen);
 //			responesClient(socket, "OK");
 			responesClientWithStream(out, "OK");
-			int len=content.length();
-			out.writeInt(readlen);
+			int len = 0;
+			for (int i = 0; i < content.length; ++i) {
+				if (content[i] == '\0') {
+					len = i;
+					break;
+				}
+			}
+			out.writeInt(len);
 
 			int bufferSize = Slave.DOWNLOAD_BUFFER_SIZE;
 			byte[] contentBuff = new byte[bufferSize];
