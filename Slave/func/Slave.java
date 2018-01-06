@@ -22,7 +22,8 @@ public class Slave {
 	
 	public  List<ChunkInfo> chunkInfoList=new ArrayList<ChunkInfo>();
 	public  List<Integer> chunkRent=new ArrayList<Integer>();
-	public static final String CHUNK_LOG = "E:\\testlog.txt"; // *1024;
+	public static final String CHUNK_LOG = "E:\\chunklog.txt"; 
+	public static final String CHUNK_RENT = "E:\\chunkRentlog.txt"; 
 	public static final int CHUNK_SIZE = 64*1024; // *1024;
 	public static final int UPLOAD_BUFFER_SIZE = 8*1024;
 	public static final int DOWNLOAD_BUFFER_SIZE = 8*1024;
@@ -36,10 +37,11 @@ public class Slave {
 		public void IniSalve() throws IOException{		
 	
 		Slave_ip=InetAddress.getLocalHost().getHostAddress();;
+	    FileReader fileReader=null;  
+	    BufferedReader bufferedReader=null;  
+	 
 		File fileName = new File(CHUNK_LOG);
 		if(fileName.exists()){  
-		      FileReader fileReader=null;  
-		      BufferedReader bufferedReader=null;  
 		      try{  
 		          fileReader=new FileReader(fileName);  
 		          bufferedReader=new BufferedReader(fileReader);  
@@ -65,6 +67,17 @@ public class Slave {
 		        }  
 		     }  	  
 		  }
+		fileName = new File(CHUNK_RENT);
+		if(fileName.exists()){
+		     String read="";  
+		     while((read=bufferedReader.readLine())!=null){  
+		           //   System.out.println("line£º"+"\r\n"+read);  
+		      chunkRent.add(Integer.valueOf(read));
+		  }
+		          
+		      
+		}
+		
 	}
 
 	
@@ -74,6 +87,7 @@ public class Slave {
 		boolean isRent=chunk.getBoolean("is_rent");
 		if(isRent){
 			chunkRent.add(chunkid);
+			writeChunkRent(chunkid);
 		}
 		ChunkInfo chunkInfo=new ChunkInfo(chunkid,Slave_ip,SLAVE_PORT,0,CHUNK_SIZE);			
 		chunkInfoList.add(chunkInfo);
@@ -107,7 +121,8 @@ public class Slave {
 	
 	
 	public boolean deleteChunk(int chunkid) throws Exception{
-		boolean flag=false;
+		boolean flagchunk=false;
+		boolean flagchunkid=false;
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);
 			if (chunkInfo.chunkId==chunkid){
@@ -116,15 +131,16 @@ public class Slave {
 					for(int j=0;j<chunkRent.size();j++){
 						if (chunkRent.get(j)==chunkid){
 							chunkRent.remove(j);
+							flagchunkid=true;
 							break;
 						}
 					}
 				}
-				flag=true;
+				flagchunk=true;
 				break;
 			}
 		}
-		if(flag){
+		if(flagchunk){
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);			
 			 File fileName = new File(CHUNK_LOG);
@@ -134,7 +150,16 @@ public class Slave {
 			this.writeChunkLog(chunkInfo);
 		}
 		}
-		return flag;
+		if(flagchunkid){
+			for(int i=0;i<chunkRent.size();i++){							
+				 File fileName = new File(CHUNK_RENT);
+				   if(fileName.exists()){ 
+					   fileName.delete();
+				   }
+				writeChunkRent(chunkRent.get(i));
+			}
+			}
+		return flagchunk;
 		
 	}
 	public byte[] readChunk(int chunkid,int offset,int readLen) throws IOException{
@@ -212,7 +237,27 @@ public class Slave {
 		  }catch(Exception e){  
 		   e.printStackTrace();  
 		  }  
-		  
+	}
+		  public  void writeChunkRent(int chunkid)throws Exception{  
+				 
+			  try{  
+				  File fileName = new File(CHUNK_RENT);
+			   if(!fileName.exists()){  
+			    fileName.createNewFile();  
+			    System.out.println("CreateFile"+CHUNK_RENT);
+			   }  
+			   
+			   BufferedWriter output = new BufferedWriter(new FileWriter(fileName,true));  
+	           
+			   String Info=chunkid+"\n";
+			   output.write(Info);  
+	           output.close(); 
+			   
+			   
+			  }catch(Exception e){  
+			   e.printStackTrace();  
+			  }  
+			  
 		  
 		 }   
 	
