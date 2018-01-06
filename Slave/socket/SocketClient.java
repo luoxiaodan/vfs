@@ -26,25 +26,26 @@ public class SocketClient {
           
        
         Socket socket = new Socket(Ip, port); 
-                socket = new Socket(Ip, port);    
-                    
+              
                  
                 OutputStream out = socket.getOutputStream();
                 InputStream input = socket.getInputStream(); 
                 
         		// protocol id
         		
-        		byte[] protocolBytes = (Integer.toString((1000)).getBytes());
+                byte[] protocolBuff = new byte[8];
+        		byte[] protocolBytes = (Integer.toString(1000)).getBytes();
+        		for (int i = 0; i < protocolBytes.length; ++i) {
+        			protocolBuff[i] = protocolBytes[i];
+        		}
+        		out.write(protocolBuff, 0, protocolBuff.length);
         		
-        		out.write(protocolBytes, 0, protocolBytes.length);
+        	
         		System.out.println("protocol id: " + protocolBytes); 
         		
         		out.close();  
                //     break;
-        		byte[] ret=new byte[8];
-                input.read(ret,0,8);     
-                System.out.println("from server: " + ret);    
-                input.read(ret,0,8); 
+         
            /*     if ("OK".equals(ret)) {    
                     System.out.println("close client");    
                     Thread.sleep(500);    
