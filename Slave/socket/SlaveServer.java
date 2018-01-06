@@ -155,8 +155,9 @@ public class SlaveServer {
 			int readlen = input.readInt();// readlen
 						
 			byte[] content = slave.readChunk(chunkid, offset, readlen);
-			responesClient(socket, "OK");
-
+//			responesClient(socket, "OK");
+			responesClientWithStream(out, "OK");
+			
 			out.writeInt(readlen);
 
 			int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
@@ -211,6 +212,11 @@ public class SlaveServer {
 			out.writeUTF(content);
 			System.out.println("response to client: " + content);
 			out.close();
+		}
+		
+		public void responesClientWithStream(DataOutputStream out, String content) throws IOException {
+			out.writeUTF(content);
+			System.out.println("response to client: " + content);
 		}
 
 		public void responseStatus(Socket socket, boolean check) throws IOException {

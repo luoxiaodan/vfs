@@ -26,7 +26,7 @@ public class Slave {
 	public static final int CHUNK_SIZE = 64 * 1024; // *1024;
 	public static final int UPLOAD_BUFFER_SIZE = 8 * 1024;
 	public static final int DOWNLOAD_BUFFER_SIZE = 8 * 1024;
-	public static final int SLAVE_PORT = 8890;
+	public static final int SLAVE_PORT = 8888;
 	public String Slave_ip = "";
 
 	public Slave() {
