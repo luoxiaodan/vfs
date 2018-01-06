@@ -64,12 +64,7 @@ public class SlaveServer {
 				System.out.println("protocol id" + protocols);
 
 				if ((protocols == VSFProtocols.WRITE_CHUNK) || (protocols == VSFProtocols.READ_CHUNK)) {
-					System.out.println("put");
-					// PushBlockQueue.getInstance().put(String.valueOf(protocols)
-					// + ":" + socket.getPort());
-					String[] Info = signObj.split(":");
-					responesClient(socket, Info[0]);
-					switch (Integer.valueOf(Info[0])) {
+					switch (protocols) {
 					case VSFProtocols.WRITE_CHUNK:
 						writeChunk(socket);
 						break;
@@ -118,9 +113,14 @@ public class SlaveServer {
 		public void writeChunk(Socket socket) throws IOException {
 
 			DataInputStream input = new DataInputStream(socket.getInputStream());
-			int chunkid = inputInt(socket);// chunk_id
-			int offset = inputInt(socket);// offset
-			int writelen = inputInt(socket);// writelen
+//			int chunkid = inputInt(socket);// chunk_id
+//			int offset = inputInt(socket);// offset
+//			int writelen = inputInt(socket);// writelen
+			// modified by zsy
+			int chunkid = input.readInt();// chunk_id
+			int offset = input.readInt();// offset
+			int writelen = input.readInt();// writelen
+			
 			String contentBuff = "";
 
 			// content
@@ -145,9 +145,15 @@ public class SlaveServer {
 
 		public void readChunk(Socket socket) throws NumberFormatException, IOException {
 			DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-			int chunkid = inputInt(socket);// chunk_id
-			int offset = inputInt(socket);// offset
-			int readlen = inputInt(socket);// readlen
+//			int chunkid = inputInt(socket);// chunk_id
+//			int offset = inputInt(socket);// offset
+//			int readlen = inputInt(socket);// readlen
+			// modified by zsy
+			DataInputStream input = new DataInputStream(socket.getInputStream());
+			int chunkid = input.readInt();// chunk_id
+			int offset = input.readInt();// offset
+			int readlen = input.readInt();// readlen
+						
 			byte[] content = slave.readChunk(chunkid, offset, readlen);
 			responesClient(socket, "OK");
 
