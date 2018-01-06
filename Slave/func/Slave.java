@@ -9,7 +9,7 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,15 +21,21 @@ public class Slave {
 
 	
 	public  List<ChunkInfo> chunkInfoList=new ArrayList<ChunkInfo>();
+	public  List<Integer> chunkRent=new ArrayList<Integer>();
 	public static final String CHUNK_LOG = "E:\\testlog.txt"; // *1024;
 	public static final int CHUNK_SIZE = 64*1024; // *1024;
 	public static final int UPLOAD_BUFFER_SIZE = 8*1024;
 	public static final int DOWNLOAD_BUFFER_SIZE = 8*1024;
+	public static final int SLAVE_PORT = 8888;
+	public String Slave_ip="";
 	
 	public Slave(){};
-	public void IniSalve() throws IOException{
-		
-		
+	public String getSlaveIp(){	
+		return Slave_ip;
+	}
+		public void IniSalve() throws IOException{		
+	
+		Slave_ip=InetAddress.getLocalHost().getHostAddress();;
 		File fileName = new File(CHUNK_LOG);
 		if(fileName.exists()){  
 		      FileReader fileReader=null;  
@@ -64,9 +70,19 @@ public class Slave {
 	
 	public boolean CreateChunk(JSONObject chunk) throws Exception{
 		
-		ChunkInfo chunkInfo=new ChunkInfo(chunk.getInt("chunk_id"), chunk.getString("slave_ip"),
-				chunk.getInt("port"), chunk.getInt("file_index"), chunk.getInt("chunk_left"));
+		int chunkid=chunk.getInt("chunk_id");
+		boolean isRent=chunk.getBoolean("is_rent");
+		if(isRent){
+			chunkRent.add(chunkid);
+		}
+		ChunkInfo chunkInfo=new ChunkInfo(chunkid,Slave_ip,SLAVE_PORT,0,CHUNK_SIZE);			
 		chunkInfoList.add(chunkInfo);
+		JSONArray copyid=chunk.getJSONArray("ids_of_copies");
+		for (int i=0;i<copyid.length();i++){
+			chunkInfo=new ChunkInfo((int)copyid.get(i),Slave_ip,SLAVE_PORT,0,CHUNK_SIZE);			
+			chunkInfoList.add(chunkInfo);
+		}
+		
 		this.writeChunkLog(chunkInfo);
 		return true;
 	}
@@ -96,6 +112,14 @@ public class Slave {
 			ChunkInfo chunkInfo=chunkInfoList.get(i);
 			if (chunkInfo.chunkId==chunkid){
 				chunkInfoList.remove(i);
+				if(chunkRent.contains(chunkid)){
+					for(int j=0;j<chunkRent.size();j++){
+						if (chunkRent.get(j)==chunkid){
+							chunkRent.remove(j);
+							break;
+						}
+					}
+				}
 				flag=true;
 				break;
 			}

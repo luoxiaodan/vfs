@@ -10,6 +10,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 import func.Slave;
+
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import struct.VSFProtocols;
@@ -27,99 +29,90 @@ public class SlaveServer {
 		SlaveServer slaveServer=new SlaveServer();
 		slave.IniSalve();
 		PushBlockQueue.getInstance().start();
-		slaveServer.initServer();
-	}
-	
-	
-	public void initServer() {
-	try {
-	// 创建一个ServerSocket在端口8080监听客户请求
-	server = new ServerSocket(8888);
-	createMessage();
-	} catch (IOException e) {
-	// TODO Auto-generated catch block
-	e.printStackTrace();
-	}
-	}
-	/**
-	* 创建消息管理，一直接收消息
-	*/
-	private void createMessage() {
-	try {
-		System.out.println("waiting for client : ");
-	
-		Socket socket = server.accept();
-		System.out.println("client socketPort : " + socket.getPort());
+		slaveServer.Server();
+	    }
 		
-		new Thread(new Runnable() {
+	    public  void Server() throws IOException{
+	    	slave.IniSalve();
+	    	 try {    
+	             ServerSocket serverSocket = new ServerSocket(Slave.SLAVE_PORT);    
+	             while (true) {    
+	                 
+	                 Socket client = serverSocket.accept();    
+	                  
+	                 new HandlerThread(client);    
+	             }    
+	         } catch (Exception e) {    
+	             System.out.println("server error: " + e.getMessage());    
+	         }    
+	    }
+	    
+	    private class HandlerThread implements Runnable {    
+	        private Socket socket;    
+	        public HandlerThread(Socket client) {    
+	            socket = client;    
+	            new Thread(this).start();    
+	        }
+			@Override
 			public void run() {
-			    createMessage();
-		}
-	}).start();
+				try {   
 	
-	BufferedReader bff = new BufferedReader(new InputStreamReader(socket.getInputStream())); 
-    	// Scanner scanner = new Scanner(socket.getInputStream());
-		String line = "";
-		// accept this socket message
-		while (true) {
-			//Thread.sleep(500);
-			
-			while ((line = bff.readLine()) != null) {		
-			  
-			   if(line.equals(String.valueOf(VSFProtocols.WRITE_CHUNK))||line.equals(String.valueOf(VSFProtocols.READ_CHUNK))){
-				   System.out.println("put");
-				   PushBlockQueue.getInstance().put(line+":"+socket.getPort());
-			   }else{
-				   
-				   if(line.equals(VSFProtocols.INITIALIZE_CHUNK_INFO)||line.equals(VSFProtocols.NEW_CHUNK)||line.equals(VSFProtocols.RELEASE_CHUNK)){ //master   
-					  
-					   switch (Integer.valueOf(line)) {
-		                case VSFProtocols.INITIALIZE_CHUNK_INFO://chunkinfo
-		                    getChunkInfo(socket);
-		                    break;
-
-		                case VSFProtocols.NEW_CHUNK://createchunk
-		                    createChunk(socket);
-		                    break;	
-		                case VSFProtocols.RELEASE_CHUNK:
-		                	deleteChunk(socket);
-		                	break;
-		                }					   
-					   
-				   }else{
-				   
-					   responesClient(socket,"Please wait...");
-				   }
-			   }
-			   Thread.sleep(500);
-			   System.out.println("context signObj :"+line+" "+signObj);
-			   if(signObj.equals(line+":"+socket.getPort())){
+	 		       int protocols=inputProtocols(socket);		
 				  
-				    
-	        		String[] Info=signObj.split(":");
-	        		responesClient(socket,Info[0]);
-	        		switch (Integer.valueOf(Info[0])) {
-	                case VSFProtocols.WRITE_CHUNK:
-	                    writeChunk(socket);
-	                    break;
-
-	                case VSFProtocols.READ_CHUNK:
-	                    readChunk(socket);
-	                    break;
-	                
-	                }
+				   if((protocols==VSFProtocols.WRITE_CHUNK)||(protocols==VSFProtocols.READ_CHUNK)){
+					   System.out.println("put");
+					   PushBlockQueue.getInstance().put(String.valueOf(protocols)+":"+socket.getPort());
+				   }else{
+					   
+					   if((protocols==VSFProtocols.INITIALIZE_CHUNK_INFO)||(protocols==VSFProtocols.NEW_CHUNK)||(protocols==VSFProtocols.RELEASE_CHUNK)){ //master   
+						  
+						   switch (protocols) {
+			                case VSFProtocols.INITIALIZE_CHUNK_INFO://chunkinfo
+			                    getChunkInfo(socket);
+			                    break;
+	
+			                case VSFProtocols.NEW_CHUNK://createchunk
+			                    createChunk(socket);
+			                    break;	
+			                case VSFProtocols.RELEASE_CHUNK:
+			                	deleteChunk(socket);
+			                	break;
+			                }					   
+						   
+					   }else{
+					   
+						   responesClient(socket,"Please wait...");
+					   }
+				   }
+				   Thread.sleep(500);
+				   System.out.println("context signObj :"+protocols+" "+signObj);
+				   if(signObj.equals(new String(protocols+":"+socket.getPort()))){
+					  
+					    
+		        		String[] Info=signObj.split(":");
+		        		responesClient(socket,Info[0]);
+		        		switch (Integer.valueOf(Info[0])) {
+		                case VSFProtocols.WRITE_CHUNK:
+		                    writeChunk(socket);
+		                    break;
+	
+		                case VSFProtocols.READ_CHUNK:
+		                    readChunk(socket);
+		                    break;
+		                
+		                }
+					   
 				   
-			   }
-			   
+				   
+				
 			}
-		}
-		// server.close();
-		} catch (Exception e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
-		System.out.println("error : " + e.getMessage());
-		}
-		}
+			// server.close();
+			} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.out.println("error : " + e.getMessage());
+			}
+			}
 	
 	public void writeChunk(Socket socket) throws IOException{
 		  
@@ -198,7 +191,6 @@ public class SlaveServer {
     }
     
     public void createChunk(Socket socket) throws Exception{
-        DataOutputStream out = new DataOutputStream(socket.getOutputStream());    
         DataInputStream input = new DataInputStream(socket.getInputStream());
         int length = input.readInt();
     	byte[] bytes = new byte[length];
@@ -225,16 +217,39 @@ public class SlaveServer {
       	  responesClient(socket,VSFProtocols.MASTER_REJECT); 
         }
     }
+    public  int inputProtocols(Socket socket) throws IOException {		
+    	DataInputStream input = new DataInputStream(socket.getInputStream());
+		
+    	byte[] protocolBuff = new byte[8];
+		input.read(protocolBuff, 0, 8);
+		int len = 0;
+		for (int i = 0; i < protocolBuff.length; ++i) {
+			if (protocolBuff[i] == '\0') {
+				len = i;
+				break;
+			}
+		}
+		return Integer.valueOf(new String(protocolBuff, 0, len));
+    	
+    	
+	}
     public  int inputInt(Socket socket) throws IOException {		
     	return Integer.valueOf(inputString(socket));
 	}
     public  String inputString(Socket socket) throws IOException {
 		DataInputStream input = new DataInputStream(socket.getInputStream());
 		int length = input.readInt();
-    	byte[] bytes = new byte[length];
-    	input.read(bytes, 0,length);
-    	return new String(bytes);
-	}
 
-    
+    	byte[] string = new byte[length];
+		input.read(string, 0, length);
+		int len = 0;
+		for (int i = 0; i < string.length; ++i) {
+			if (string[i] == '\0') {
+				len = i;
+				break;
+			}
+		}
+	    return new String(string);
+	    }
+	    }
 }
