@@ -157,14 +157,14 @@ public class SlaveServer {
 			byte[] content = slave.readChunk(chunkid, offset, readlen);
 //			responesClient(socket, "OK");
 			responesClientWithStream(out, "OK");
-			
+			int len=content.length();
 			out.writeInt(readlen);
 
-			int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
+			int bufferSize = Slave.DOWNLOAD_BUFFER_SIZE;
 			byte[] contentBuff = new byte[bufferSize];
 			int contentCount = 0;
 			while (contentCount < readlen) {
-				int writeNum = Math.min(bufferSize, readlen - contentCount);
+				int writeNum = Math.min(bufferSize, len - contentCount);
 				for (int i = 0; i < bufferSize; ++i) {
 					contentBuff[i] = content[contentCount + i];
 				}
