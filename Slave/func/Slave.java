@@ -74,9 +74,10 @@ public class Slave {
 		     }  	  
 		  }
 		fileName = new File(CHUNK_RENT);
+		if(fileName.exists()){
 		fileReader=new FileReader(fileName);  
 		bufferedReader=new BufferedReader(fileReader); 
-		if(fileName.exists()){
+		
 		     String read="";  
 		     while((read=bufferedReader.readLine())!=null){ 
 		    	 String[] copyids=read.split(" ");
