@@ -1,4 +1,4 @@
-package socket;
+package vfs.socket;
 
 import java.io.BufferedReader;
 import java.io.DataInputStream;

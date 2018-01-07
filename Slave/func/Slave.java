@@ -1,4 +1,4 @@
-package func;
+package vfs.func;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,13 +13,13 @@ import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import struct.ChunkInfo;
+
+import vfs.struct.ChunkInfo;
 
 public class Slave {
 
 	
 	public  List<ChunkInfo> chunkInfoList=new ArrayList<ChunkInfo>();
-//	public static  HashMap<Integer,PushBlockQueue> chunkRent=new HashMap();
     public  List<Chunk> chunkRent=new ArrayList<Chunk>();
 	public static final String CHUNK_LOG = "E:\\chunklog.txt"; 
 	public static final String CHUNK_RENT = "E:\\chunkRentlog.txt"; 
@@ -32,8 +32,7 @@ public class Slave {
 	public static final String MASTER_IP="127.0.0.1";
 	public static final int MASTER_PORT=7777;
 	public static final String HEARTMESSAGE = "87654321";
-	public String Slave_ip="";
-	
+	public String Slave_ip="";	
 	public Slave(){};
 	public String getSlaveIp(){	
 		return Slave_ip;
@@ -45,7 +44,26 @@ public class Slave {
 	    FileReader fileReader=null;  
 	    BufferedReader bufferedReader=null;  
 	 
-		File fileName = new File(CHUNK_LOG);
+		File fileName = new File(CHUNK_RENT);
+		if(fileName.exists()){
+		fileReader=new FileReader(fileName);  
+		bufferedReader=new BufferedReader(fileReader); 
+		
+		     String read="";  
+		     while((read=bufferedReader.readLine())!=null){ 
+		    	 String[] copyids=read.split(" ");
+                 Chunk chunk=new Chunk(Integer.valueOf(copyids[0]),this);
+		         for(int i=1;i<copyids.length;i++){
+		        	 chunk.copyids.add(Integer.valueOf(copyids[i]));
+		         }		         
+		         chunkRent.add(chunk);
+		 //     chunkRent.get(Integer.valueOf(read)).getInstance().start();
+		     }
+		          
+		      
+		}
+		
+		fileName = new File(CHUNK_LOG);
 		if(fileName.exists()){  
 		      try{  
 		          fileReader=new FileReader(fileName);  
@@ -73,24 +91,7 @@ public class Slave {
 		        }  
 		     }  	  
 		  }
-		fileName = new File(CHUNK_RENT);
-		if(fileName.exists()){
-		fileReader=new FileReader(fileName);  
-		bufferedReader=new BufferedReader(fileReader); 
 		
-		     String read="";  
-		     while((read=bufferedReader.readLine())!=null){ 
-		    	 String[] copyids=read.split(" ");
-                 Chunk chunk=new Chunk(Integer.valueOf(copyids[0]),this);
-		         for(int i=1;i<copyids.length;i++){
-		        	 chunk.copyids.add(Integer.valueOf(copyids[i]));
-		         }		         
-		         chunkRent.add(chunk);
-		 //     chunkRent.get(Integer.valueOf(read)).getInstance().start();
-		     }
-		          
-		      
-		}
 		
 	}
 
@@ -112,6 +113,7 @@ public class Slave {
 		Chunk chunk=null;
 		if(isRent){
 			chunk=new Chunk(chunkid,this);
+			chunk.isRent=true;
 			chunkRent.add(chunk);						
 		}
 		ChunkInfo chunkInfo=new ChunkInfo(chunkid,Slave_ip,SLAVE_PORT,0,CHUNK_SIZE);			
@@ -278,7 +280,7 @@ public class Slave {
 		   e.printStackTrace();  
 		  }  
 	}
-		  public  void writeChunkRent(Chunk chunk)throws Exception{  
+	public  void writeChunkRent(Chunk chunk)throws Exception{  
 				 
 			  try{  
 				  File fileName = new File(CHUNK_RENT);
