@@ -72,7 +72,7 @@ public class Chunk {
 						 if(isRent){
 							 isRent=false;
 							 try {
-								if(SocketUtil.sendToMaster(VSFProtocols.RENT_CHUN)){
+								if(SocketUtil.sendToMaster(VSFProtocols.RENEW_LEASE)){
 									 isRent=true;
 								 }
 							} catch (IOException e) {
