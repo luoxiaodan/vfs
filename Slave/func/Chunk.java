@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import vfs.socket.SlaveServer;
+import vfs.struct.ChunkInfo;
 import vfs.struct.VSFProtocols;
 
 
@@ -17,7 +18,7 @@ public class Chunk {
 	public String status;
 	public boolean isRent=false;
 //	public PushBlockQueue queue;
-	public  List<Integer> copyids; 
+	public  List<ChunkInfo> copyids; 
 	public  List<Integer> offset;
 	public  List<Integer> len;
 	public  List<String> content;
@@ -31,7 +32,7 @@ public class Chunk {
 	public Chunk(int _chunkid,Slave _slave){
 		chunkId=_chunkid;
 		status="idle";		
-		copyids=new ArrayList<Integer>();
+		copyids=new ArrayList<ChunkInfo>();
 		offset=new ArrayList<Integer>();
 		len=new ArrayList<Integer>();
 		content=new ArrayList<String>();
@@ -67,12 +68,12 @@ public class Chunk {
 			@Override
 			public void run() {
 				//System.out.println(status);
-				while(true){
+				while(!close){
 					 if(System.currentTimeMillis()-lastSendTime>keepAliveDelay){ 
 						 if(isRent){
 							 isRent=false;
 							 try {
-								if(SocketUtil.sendToMaster(VSFProtocols.RENEW_LEASE)){
+								if(SocketUtil.sendToMaster(VSFProtocols.RENEW_LEASE,chunkId)){
 									 isRent=true;
 								 }
 							} catch (IOException e) {
@@ -93,13 +94,21 @@ public class Chunk {
 						case WRITE:
 							slave.writeChunk(chunkId,offset.get(0),len.get(0),content.get(0));
 							for(int i=0;i<copyids.size();i++){
-								slave.writeChunk(copyids.get(i),offset.get(0),len.get(0),content.get(0));							
+								ChunkInfo copy=copyids.get(i);
+								try {
+									SocketUtil.writeCopyChunk(copy.slaveIP,copy.port,copy.chunkId,offset.get(0),len.get(0),content.get(0));
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
+															
 							}
 							offset.remove(0);
 							len.remove(0);
 							content.remove(0);
 							option.remove(0);
 							status="idle";
+							SlaveServer.signWrite="OK";
 							break;
 						case READ:
 							status="comp";

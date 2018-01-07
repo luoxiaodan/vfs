@@ -44,6 +44,7 @@ public class Slave {
 	    FileReader fileReader=null;  
 	    BufferedReader bufferedReader=null;  
 	 
+	    
 		File fileName = new File(CHUNK_RENT);
 		if(fileName.exists()){
 		fileReader=new FileReader(fileName);  
@@ -51,17 +52,14 @@ public class Slave {
 		
 		     String read="";  
 		     while((read=bufferedReader.readLine())!=null){ 
-		    	 String[] copyids=read.split(" ");
-                 Chunk chunk=new Chunk(Integer.valueOf(copyids[0]),this);
-		         for(int i=1;i<copyids.length;i++){
-		        	 chunk.copyids.add(Integer.valueOf(copyids[i]));
-		         }		         
-		         chunkRent.add(chunk);
+		    	 
+		         chunkRent.add(new Chunk(Integer.valueOf(read),this));
 		 //     chunkRent.get(Integer.valueOf(read)).getInstance().start();
 		     }
 		          
 		      
 		}
+		
 		
 		fileName = new File(CHUNK_LOG);
 		if(fileName.exists()){  
@@ -95,6 +93,23 @@ public class Slave {
 		
 	}
 
+		
+	public boolean iniChunk(JSONObject chunklist){
+		int chunkid=chunklist.getInt("main_chunk_id");
+		Chunk mainchunk=new Chunk(chunkid,this);
+		mainchunk.isRent=true;
+		chunkRent.add(mainchunk);
+		JSONArray copys=chunklist.getJSONArray("copies");
+		for (int i=0;i<copys.length();i++){
+			JSONObject chunk=copys.getJSONObject(i);
+			int copyid=chunk.getInt("chunk_id");
+			String copyip=chunk.getString("slave_ip");
+			int copyport=chunk.getInt("port");
+			ChunkInfo copy=new ChunkInfo(copyid,copyip,copyport,0,CHUNK_SIZE);
+			mainchunk.copyids.add(copy);			
+		}
+		return true;
+	}
 	public  void chunkOption(String option,int chunkid,int offset,int len,String content) throws InterruptedException{
 		for(int i=0;i<chunkRent.size();i++){				
 			if (chunkRent.get(i).chunkId==chunkid){
@@ -110,26 +125,39 @@ public class Slave {
 		
 		int chunkid=chunklist.getInt("chunk_id");
 		boolean isRent=chunklist.getBoolean("is_rent");
-		Chunk chunk=null;
+		Chunk mainchunk=null;
 		if(isRent){
-			chunk=new Chunk(chunkid,this);
-			chunk.isRent=true;
-			chunkRent.add(chunk);						
+			mainchunk=new Chunk(chunkid,this);
+			mainchunk.isRent=true;
+			chunkRent.add(mainchunk);						
 		}
 		ChunkInfo chunkInfo=new ChunkInfo(chunkid,Slave_ip,SLAVE_PORT,0,CHUNK_SIZE);			
 		chunkInfoList.add(chunkInfo);
-		JSONArray copyid=chunklist.getJSONArray("ids_of_copies");
-		for (int i=0;i<copyid.length();i++){
-			chunk.copyids.add((int)copyid.get(i));
-			chunkInfo=new ChunkInfo((int)copyid.get(i),Slave_ip,SLAVE_PORT,0,CHUNK_SIZE);			
-			chunkInfoList.add(chunkInfo);
+		JSONArray copys=chunklist.getJSONArray("ids_of_copies");
+		for (int i=0;i<copys.length();i++){
+			JSONObject chunk=copys.getJSONObject(i);
+			int copyid=chunk.getInt("chunk_id");
+			String copyip=chunk.getString("slave_ip");
+			int copyport=chunk.getInt("port");
+			ChunkInfo copy=new ChunkInfo(copyid,copyip,copyport,0,CHUNK_SIZE);
+			SocketUtil.TocreateCopyChunk(copyip, copyport,chunk);
+			mainchunk.copyids.add(copy);	
 		}	
-		writeChunkRent(chunk);
+		
 		this.writeChunkLog(chunkInfo);
 		return true;
 	}
 	
-	
+	public boolean createCopy(JSONObject chunk) throws Exception{
+		int copyid=chunk.getInt("chunk_id");
+		String copyip=chunk.getString("slave_ip");
+		int copyport=chunk.getInt("port");
+		ChunkInfo copy=new ChunkInfo(copyid,copyip,copyport,0,CHUNK_SIZE);
+		chunkInfoList.add(copy);
+		this.writeChunkLog(copy);
+		return true;
+		
+	}
 	public JSONArray getChunkList(){
 		JSONArray chunkArray = new JSONArray();
 		for(int i=0;i<chunkInfoList.size();i++){
@@ -150,21 +178,28 @@ public class Slave {
 	
 	public boolean deleteChunk(int chunkid) throws Exception{
 		boolean flagchunk=false;
-		boolean flagchunkid=false;
+		
 		for(int i=0;i<chunkInfoList.size();i++){
 			ChunkInfo chunkInfo=chunkInfoList.get(i);
 			if (chunkInfo.chunkId==chunkid){
 				chunkInfoList.remove(i);
 				for(int j=0;j<chunkRent.size();j++){
 					if (chunkRent.get(j).chunkId==chunkid){
+						    for(int k=0;k<=chunkRent.get(j).copyids.size();k++){
+						    	ChunkInfo copy=chunkRent.get(j).copyids.get(k);
+						    	flagchunk=SocketUtil.deleteCopyChunk(copy.slaveIP, copy.port, copy.chunkId);
+						        if(!flagchunk){
+						        	System.out.println("delete copy chunk error,copyid :"+copy.chunkId);
+						        }
+						    }
+						    flagchunk=true;
 						    chunkRent.get(j).close=true;
-							chunkRent.remove(chunkid);
-							flagchunkid=true;
+							chunkRent.remove(chunkid);							
 							break;
 						}
 					}
 				}
-				flagchunk=true;
+				
 				break;
 			}
 		
@@ -174,22 +209,11 @@ public class Slave {
 				   fileName.delete();
 			   }
 			for(int i=0;i<chunkInfoList.size();i++){
-				ChunkInfo chunkInfo=chunkInfoList.get(i);			
-				
+				ChunkInfo chunkInfo=chunkInfoList.get(i);							
 				this.writeChunkLog(chunkInfo);
 			}
 		}
-		if(flagchunkid){
-			File fileName = new File(CHUNK_RENT);
-			   if(fileName.exists()){ 
-				   fileName.delete();
-			   }
-			   for(int i=0;i<chunkRent.size();i++){
-						
-					writeChunkRent(chunkRent.get(i));
-				}
-				  			
-			}
+		
 			
 			
 		return flagchunk;

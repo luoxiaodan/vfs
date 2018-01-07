@@ -1,10 +1,10 @@
 package vfs.func;
 
-import java.io.BufferedReader;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
+
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -106,7 +106,7 @@ public class SocketUtil {
 		out.write(protocolBuff, 0, protocolBuff.length);
 	}
    
-   public static boolean sendToMaster(int protocol) throws UnknownHostException, IOException{
+   public static boolean heartToMaster(int protocol) throws UnknownHostException, IOException{
 	   boolean flag=false;
 	   Socket heartsocket=new Socket(Slave.MASTER_IP,Slave.MASTER_PORT); 
        DataOutputStream out=new DataOutputStream(heartsocket.getOutputStream());
@@ -120,5 +120,99 @@ public class SocketUtil {
        out.close();
        return flag;
    }
-	    
+   public static boolean sendToMaster(int protocol,int chunkid) throws UnknownHostException, IOException{
+	   boolean flag=false;
+	   Socket heartsocket=new Socket(Slave.MASTER_IP,Slave.MASTER_PORT); 
+       DataOutputStream out=new DataOutputStream(heartsocket.getOutputStream());
+   	   DataInputStream input = new DataInputStream(heartsocket.getInputStream());
+	
+       outputProtocol(out,protocol);
+       out.writeInt(chunkid);
+       if(input.readUTF().equals(VSFProtocols.MESSAGE_OK)){
+    	   flag=true;
+       }
+       input.close();
+       out.close();
+       return flag;
+   }
+   public static boolean writeCopyChunk(String Slave_IP,int port,int chunkid,int offset,int len,String content) throws UnknownHostException, IOException{
+	   boolean flag=false;
+	   Socket socket=new Socket(Slave_IP,port);
+	   DataOutputStream out=new DataOutputStream(socket.getOutputStream());
+   	   DataInputStream input = new DataInputStream(socket.getInputStream());
+       outputProtocol(out,VSFProtocols.WRITE_COPY);
+       out.writeInt(chunkid);
+       out.writeInt(offset);
+       out.writeInt(len);
+       byte[] buf=content.getBytes();
+       int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
+		byte[] contentBuff = new byte[bufferSize];
+		int contentCount = 0;
+		while(contentCount < len){
+			int writeNum = Math.min(bufferSize, len-contentCount);
+			for(int i = 0; i < bufferSize; ++i){
+				contentBuff[i] = buf[contentCount+i];
+			}
+			out.write(contentBuff, 0, writeNum);
+			out.flush();
+			
+			contentCount += writeNum;
+		}
+		if(input.readUTF().equals(VSFProtocols.MESSAGE_OK)){
+			socket.close();
+		}else{
+			System.out.println("write to copy error, copychunkid :"+chunkid);
+		}
+	   
+	   return flag;
+   }
+   
+   public static boolean deleteCopyChunk(String Slave_IP,int port,int chunkid) throws UnknownHostException, IOException{
+	   boolean flag=false;
+	   Socket socket=new Socket(Slave_IP,port);
+	   DataOutputStream out=new DataOutputStream(socket.getOutputStream());
+   	   DataInputStream input = new DataInputStream(socket.getInputStream());
+       outputProtocol(out,VSFProtocols.RELEASE_CHUNK);
+       out.writeInt(chunkid);
+		if(input.readUTF().equals(VSFProtocols.MESSAGE_OK)){
+			socket.close();
+		}else{
+			System.out.println("write to copy error, copychunkid :"+chunkid);
+		}
+	   out.close();
+	   return flag;
+   }
+
+   public static boolean TocreateCopyChunk(String Slave_IP,int port,JSONObject chunk) throws UnknownHostException, IOException{
+	   
+	   Socket socket=new Socket(Slave_IP,port);
+	   DataOutputStream out=new DataOutputStream(socket.getOutputStream());
+   	   DataInputStream input = new DataInputStream(socket.getInputStream());
+       outputProtocol(out,VSFProtocols.CREATE_COPY);
+       
+       byte[] bytes = chunk.toString().getBytes();	
+       out.writeInt(bytes.length);
+	   out.write(bytes, 0, bytes.length);
+       out.close();
+	   
+	   return true;
+	   
+   }
+	public static void createCopyChunk(DataOutputStream out,DataInputStream input,Slave slave) throws Exception{
+		int length = input.readInt();
+	   	   byte[] bytes = new byte[length];
+	   	   input.read(bytes, 0, length);	   	
+	       JSONObject chunk = new JSONObject(new String(bytes));
+		   boolean stateWruteChunk=slave.createCopy(chunk);
+		   responseStatus(out,stateWruteChunk);
+		    
+	   }
+   public static void iniChunk(DataOutputStream out,DataInputStream input,Slave slave) throws IOException{
+	   int length = input.readInt();
+   	   byte[] bytes = new byte[length];
+   	   input.read(bytes, 0, length);   	
+       JSONObject chunk = new JSONObject(new String(bytes));
+	   boolean stateWruteChunk=slave.iniChunk(chunk);
+	   responseStatus(out,stateWruteChunk);
+   }
 }

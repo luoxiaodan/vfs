@@ -20,6 +20,7 @@ public class SlaveServer {
 	private static ServerSocket server;
 	private static long lastSendTime;
 	public static String signRead="";
+	public static String signWrite="";
 	private static Slave slave=new Slave();
 	public static void main(String[] args) throws IOException, InterruptedException {    
 		SlaveServer slaveServer=new SlaveServer();
@@ -34,9 +35,10 @@ public class SlaveServer {
 	    		 	            
 				ServerSocket serverSocket = new ServerSocket(Slave.SLAVE_PORT); 
 				lastSendTime=System.currentTimeMillis();  
-				new Thread(new KeepHeart()).start();
+				//new Thread(new KeepHeart()).start();
 				//=======================test===============
 	            // new Thread(new KeepHeart()).start();//heartmessage
+				 slave.chunkOption("write", 1, 0, 2, "23");
 	/*			 slave.chunkOption("write", 1, 0, 2, "23");
 	             slave.chunkOption("read", 1, 0, 2, "");
 	             while(!signRead.equals("OK"));
@@ -64,7 +66,7 @@ public class SlaveServer {
 	                if(System.currentTimeMillis()-lastSendTime>keepAliveDelay){  
 	                    try {  
 	                      
-	                       if(!SocketUtil.sendToMaster(VSFProtocols.HEART_BEAT_DETECT_TO_SLAVE)){
+	                       if(!SocketUtil.heartToMaster(VSFProtocols.HEART_BEAT_DETECT_TO_MASTER)){
 	                    	   System.out.println("master error");
 	                       }
 	                    } catch (IOException e) {  
@@ -102,7 +104,7 @@ public class SlaveServer {
 						 
 		        		switch (Integer.valueOf(protocols)) {
 		                case VSFProtocols.WRITE_CHUNK:
-		                    writeChunk(socket);		                		                     
+		                    writeChunk(out,input,false);		                		                     
 		                    break;
 	
 		                case VSFProtocols.READ_CHUNK:
@@ -121,7 +123,17 @@ public class SlaveServer {
 		                	break;
 		                case VSFProtocols.HEART_BEAT_DETECT_TO_MASTER:
 		                	SocketUtil.sendHeartMessage(out);
-			           
+		                	break;
+		                case VSFProtocols.ASSIGN_MAIN_CHUNK:
+		                	SocketUtil.iniChunk(out,input,slave);
+		                	break;
+		                case VSFProtocols.WRITE_COPY:
+		                	writeChunk(out,input,true);
+		                	break;
+		                case VSFProtocols.CREATE_COPY:
+		                	SocketUtil.createCopyChunk(out,input,slave);
+		                	break;
+		                	
 				   
 					   
 				   }
@@ -135,18 +147,18 @@ public class SlaveServer {
 			System.out.println("error : " + e.getMessage());
 			}
 			}
-			public void writeChunk(Socket socket) throws IOException, InterruptedException{
+			public void writeChunk( DataOutputStream out,DataInputStream input,boolean copy) throws IOException, InterruptedException{
 				  
 		           
-				  DataInputStream input = new DataInputStream(socket.getInputStream());
+				  
 				  int chunkid = input.readInt();// chunk_id
 				  int offset = input.readInt();// offset
 				  int writelen = input.readInt();// writelen
-	       	  String contentBuff="";
+	       	      String contentBuff="";
 	      	 
-	       	  //content
-	       	  int contentCount = 0;
-	       	  byte[] tempBuf = new byte[Slave.UPLOAD_BUFFER_SIZE];
+	       	  
+	       	      int contentCount = 0;
+	       	      byte[] tempBuf = new byte[Slave.UPLOAD_BUFFER_SIZE];
 	         	
 	         	  while(true){
 	         		if(contentCount >= writelen){
@@ -158,10 +170,18 @@ public class SlaveServer {
 	         		    contentCount += aRead;
 	         	}
 	       	
+	       	  if(copy){
+	       		boolean check=  slave.writeChunk(chunkid, offset, writelen, contentBuff);
+	       		SocketUtil.responseStatus(out,check); 
+	       	  }else{
+	              slave.chunkOption("write",chunkid,offset,writelen,contentBuff);
+	              
 	       	  
-	          slave.chunkOption("write",chunkid,offset,writelen,contentBuff);
-	                          
-	          
+	       	  while(!signWrite.equals("OK"));
+	              if(signWrite.equals("OK")){
+	            	  SocketUtil.responesClient(out,VSFProtocols.MESSAGE_OK); 
+	              }
+	       	  }
 	           
 		
 		}
