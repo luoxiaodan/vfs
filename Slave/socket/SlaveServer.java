@@ -35,11 +35,11 @@ public class SlaveServer {
 	    		 	            
 				ServerSocket serverSocket = new ServerSocket(Slave.SLAVE_PORT); 
 				lastSendTime=System.currentTimeMillis();  
-				//new Thread(new KeepHeart()).start();
+		//		new Thread(new KeepHeart()).start();
 				//=======================test===============
 	            // new Thread(new KeepHeart()).start();//heartmessage
-				 slave.chunkOption("write", 1, 0, 2, "23");
 	/*			 slave.chunkOption("write", 1, 0, 2, "23");
+				 slave.chunkOption("write", 1, 0, 2, "23");
 	             slave.chunkOption("read", 1, 0, 2, "");
 	             while(!signRead.equals("OK"));
 	             if(signRead.equals("OK")){

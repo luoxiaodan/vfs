@@ -29,7 +29,7 @@ public class Slave {
 	public static final int SLAVE_PORT = 8888;
 	public static final int WRITE_CHUNK = 6001;
 	public static final int READ_CHUNK = 6002;
-	public static final String MASTER_IP="127.0.0.1";
+	public static final String MASTER_IP="xxxxxxx";
 	public static final int MASTER_PORT=7777;
 	public static final String HEARTMESSAGE = "87654321";
 	public String Slave_ip="";	
