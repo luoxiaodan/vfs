@@ -48,15 +48,62 @@ public class Chunk {
 
 	public void WRchunk(String _option, int _offset, int _len, String _content,DataOutputStream _out) throws InterruptedException {
 		// queue.getInstance().start();
-		option.add(_option);
 		
+		System.out.println("chunk put data");
 		if (_option.equals(WRITE)) {
 			offset.add(_offset);
 			len.add(_len);
 			content.add(_content);
 			out.add(_out);
 		}
+		option.add(_option);
 		// queue.getInstance().put(option);
+       while(!status.equals("idle"));
+       if (status.equals("idle")) {
+		if (option.size() > 0) {
+			System.out.println("option size > 0 status: "+status);
+			
+				status = "comp";
+				String current_option = option.get(0);
+				switch (current_option) {
+				case WRITE:
+					slave.writeChunk(chunkId, offset.get(0), len.get(0), content.get(0));
+					for (int i = 0; i < copyids.size(); i++) {
+						ChunkInfo copy = copyids.get(i);
+						try {
+							SocketUtil.writeCopyChunk(copy.slaveIP, copy.port, copy.chunkId, offset.get(0),
+									len.get(0), content.get(0));
+							
+											
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+						DataOutputStream output=out.get(0);
+						try {
+							SocketUtil.responesClient(output, VSFProtocols.MESSAGE_OK);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+										
+					out.remove(0);
+					offset.remove(0);
+					len.remove(0);
+					content.remove(0);
+					option.remove(0);
+					status = "idle";
+					SlaveServer.signWrite = "OK";
+					break;
+				case READ:
+					status = "comp";
+					
+
+					break;
+				}
+			}
+		}
 	}
 
 	private class HandlerThread implements Runnable {
@@ -74,6 +121,7 @@ public class Chunk {
 		public void run() {
 			// System.out.println(status);
 			while (!close) {
+				//System.out.println("option running : "+option.size());
 				if (System.currentTimeMillis() - lastSendTime > keepAliveDelay) {
 					if (isRent) {
 						isRent = false;
@@ -89,53 +137,6 @@ public class Chunk {
 					}
 				}
 
-				if (option.size() > 0) {
-					System.out.println("option size > 0");
-					if (status.equals("idle")) {
-						System.out.println("chunk work :" + Chunk.this.option.get(0));
-						status = "comp";
-						String _option = option.get(0);
-						switch (_option) {
-						case WRITE:
-							slave.writeChunk(chunkId, offset.get(0), len.get(0), content.get(0));
-							for (int i = 0; i < copyids.size(); i++) {
-								ChunkInfo copy = copyids.get(i);
-								try {
-									SocketUtil.writeCopyChunk(copy.slaveIP, copy.port, copy.chunkId, offset.get(0),
-											len.get(0), content.get(0));
-									
-									
-									
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-								DataOutputStream output=out.get(0);
-								try {
-									SocketUtil.responesClient(output, VSFProtocols.MESSAGE_OK);
-								} catch (IOException e) {
-									// TODO Auto-generated catch block
-									e.printStackTrace();
-								}
-							}
-							
-							
-							out.remove(0);
-							offset.remove(0);
-							len.remove(0);
-							content.remove(0);
-							option.remove(0);
-							status = "idle";
-							SlaveServer.signWrite = "OK";
-							break;
-						case READ:
-							status = "comp";
-							SlaveServer.signRead = "OK";
-
-							break;
-						}
-					}
-				}
 			}
 		}
 	}
