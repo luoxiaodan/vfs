@@ -127,14 +127,11 @@ public class Slave {
 
 	public boolean CreateChunk(JSONObject chunklist) throws Exception {
 
-		int chunkid = chunklist.getInt("chunk_id");
-		boolean isRent = chunklist.getBoolean("is_rent");
+		int chunkid = chunklist.getInt("main_chunk_id");
 		Chunk mainchunk = null;
-		if (isRent) {
-			mainchunk = new Chunk(chunkid, this);
-			mainchunk.isRent = true;
-			chunkRent.add(mainchunk);
-		}
+		mainchunk = new Chunk(chunkid, this);
+		mainchunk.isRent = true;
+		chunkRent.add(mainchunk);
 		ChunkInfo chunkInfo = new ChunkInfo(chunkid, Slave_ip, SLAVE_PORT, 0, CHUNK_SIZE);
 		chunkInfoList.add(chunkInfo);
 		JSONArray copys = chunklist.getJSONArray("copies");
