@@ -127,7 +127,27 @@ public class Slave {
 		}
 
 	}
-
+	
+	public String getChunkStatus(int chunkid){
+		String status="comp";
+		for (int i = 0; i < chunkRent.size(); i++) {
+			if (chunkRent.get(i).chunkId == chunkid) {
+				status=chunkRent.get(i).status;
+			}
+			}
+		
+		return status;
+	}
+	public void changeChunkStatus(int chunkid){
+		
+		for (int i = 0; i < chunkRent.size(); i++) {
+			if (chunkRent.get(i).chunkId == chunkid) {
+				chunkRent.get(i).status="idle";
+			}
+			}
+		
+		
+	}
 	public boolean CreateChunk(JSONObject chunklist) throws Exception {
 
 		int chunkid = chunklist.getInt("main_chunk_id");

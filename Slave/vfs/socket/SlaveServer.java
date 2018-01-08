@@ -197,12 +197,12 @@ public class SlaveServer {
 			signRead = "";
 
 			slave.chunkOption("read", chunkid, offset, readlen, "",out);
-			while (!signRead.equals("OK"))
+			while (!slave.getChunkStatus(chunkid).equals("idle"))
 				;
-			if (signRead.equals("OK")) {
+			if (slave.getChunkStatus(chunkid).equals("idle")) {
 				content = slave.readChunk(chunkid, offset, readlen);
 			}
-
+			slave.changeChunkStatus(chunkid);
 			SocketUtil.responesClient(out, "OK");
 
 			int len = 0;
