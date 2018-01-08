@@ -28,8 +28,8 @@ public class Slave {
 	public static final int SLAVE_PORT = 8888;
 	public static final int WRITE_CHUNK = 6001;
 	public static final int READ_CHUNK = 6002;
-	public static final String MASTER_IP = "xxxxxxx";
-	public static final int MASTER_PORT = 7777;
+	public static final String MASTER_IP = "localhost";
+	public static final int MASTER_PORT = 8877;
 	public static final String HEARTMESSAGE = "87654321";
 	public String Slave_ip = "";
 
@@ -137,7 +137,7 @@ public class Slave {
 		}
 		ChunkInfo chunkInfo = new ChunkInfo(chunkid, Slave_ip, SLAVE_PORT, 0, CHUNK_SIZE);
 		chunkInfoList.add(chunkInfo);
-		JSONArray copys = chunklist.getJSONArray("ids_of_copies");
+		JSONArray copys = chunklist.getJSONArray("copies");
 		for (int i = 0; i < copys.length(); i++) {
 			JSONObject chunk = copys.getJSONObject(i);
 			int copyid = chunk.getInt("chunk_id");
