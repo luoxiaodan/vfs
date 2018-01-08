@@ -57,8 +57,8 @@ public class SlaveServer {
 	}
 
 	class KeepHeart implements Runnable {
-		long checkDelay = 10;
-		long keepAliveDelay = 200;
+		long checkDelay = 10000;
+		long keepAliveDelay = 200000000;
 
 		public KeepHeart() {
 		}

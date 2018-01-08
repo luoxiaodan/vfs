@@ -41,7 +41,7 @@ public class Chunk {
 		// queue.getInstance().start();
 		lastSendTime = System.currentTimeMillis();
 		handlerThread = new HandlerThread(_slave);
-		
+		out=new ArrayList<DataOutputStream>();
 	}
 	
 	
@@ -61,8 +61,8 @@ public class Chunk {
 
 	private class HandlerThread implements Runnable {
 		private Slave slave;
-		long checkDelay = 10;
-		long keepAliveDelay = 200;
+		long checkDelay = 100000;
+		long keepAliveDelay = 20000000;
 
 		public HandlerThread(Slave _slave) {
 			slave = _slave;
@@ -103,15 +103,23 @@ public class Chunk {
 								try {
 									SocketUtil.writeCopyChunk(copy.slaveIP, copy.port, copy.chunkId, offset.get(0),
 											len.get(0), content.get(0));
-									DataOutputStream output=out.get(0);
-									SocketUtil.responesClient(output, VSFProtocols.MESSAGE_OK);
+									
+									
 									
 								} catch (IOException e) {
 									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
-
+								DataOutputStream output=out.get(0);
+								try {
+									SocketUtil.responesClient(output, VSFProtocols.MESSAGE_OK);
+								} catch (IOException e) {
+									// TODO Auto-generated catch block
+									e.printStackTrace();
+								}
 							}
+							
+							
 							out.remove(0);
 							offset.remove(0);
 							len.remove(0);
