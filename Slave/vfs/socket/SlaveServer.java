@@ -172,13 +172,8 @@ public class SlaveServer {
 				boolean check = slave.writeChunk(chunkid, offset, writelen, contentBuff);
 				SocketUtil.responseStatus(out, check);
 			} else {
-				slave.chunkOption("write", chunkid, offset, writelen, contentBuff);
+				slave.chunkOption("write", chunkid, offset, writelen, contentBuff,out);
 
-				while (!signWrite.equals("OK"))
-					;
-				if (signWrite.equals("OK")) {
-					SocketUtil.responesClient(out, VSFProtocols.MESSAGE_OK);
-				}
 			}
 
 		}
@@ -194,7 +189,7 @@ public class SlaveServer {
 
 			signRead = "";
 
-			slave.chunkOption("read", chunkid, offset, readlen, "");
+			slave.chunkOption("read", chunkid, offset, readlen, "",out);
 			while (!signRead.equals("OK"))
 				;
 			if (signRead.equals("OK")) {

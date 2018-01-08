@@ -27,6 +27,7 @@ public class Chunk {
 	public boolean close = false;
 	public HandlerThread handlerThread;
 	private static long lastSendTime;
+	private List<DataOutputStream> out;
 
 	public Chunk(int _chunkid, Slave _slave) {
 		chunkId = _chunkid;
@@ -40,16 +41,20 @@ public class Chunk {
 		// queue.getInstance().start();
 		lastSendTime = System.currentTimeMillis();
 		handlerThread = new HandlerThread(_slave);
+		
 	}
+	
+	
 
-	public void WRchunk(String _option, int _offset, int _len, String _content) throws InterruptedException {
+	public void WRchunk(String _option, int _offset, int _len, String _content,DataOutputStream _out) throws InterruptedException {
 		// queue.getInstance().start();
 		option.add(_option);
+		
 		if (_option.equals(WRITE)) {
 			offset.add(_offset);
 			len.add(_len);
 			content.add(_content);
-
+			out.add(_out);
 		}
 		// queue.getInstance().put(option);
 	}
@@ -83,7 +88,7 @@ public class Chunk {
 					}
 				}
 
-				if (slave.chunkRent.get(0).option.size() > 0) {
+				if (option.size() > 0) {
 
 					if (status.equals("idle")) {
 						System.out.println("size :" + Chunk.this.option.size());
@@ -97,12 +102,16 @@ public class Chunk {
 								try {
 									SocketUtil.writeCopyChunk(copy.slaveIP, copy.port, copy.chunkId, offset.get(0),
 											len.get(0), content.get(0));
+									DataOutputStream output=out.get(0);
+									SocketUtil.responesClient(output, VSFProtocols.MESSAGE_OK);
+									
 								} catch (IOException e) {
 									// TODO Auto-generated catch block
 									e.printStackTrace();
 								}
 
 							}
+							out.remove(0);
 							offset.remove(0);
 							len.remove(0);
 							content.remove(0);

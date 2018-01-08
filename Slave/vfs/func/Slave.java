@@ -2,6 +2,7 @@ package vfs.func;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -9,6 +10,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
@@ -31,6 +33,7 @@ public class Slave {
 	public static final String MASTER_IP = "localhost";
 	public static final int MASTER_PORT = 8877;
 	public static final String HEARTMESSAGE = "87654321";
+	
 	public String Slave_ip = "";
 
 	public Slave() {
@@ -55,7 +58,7 @@ public class Slave {
 			String read = "";
 			while ((read = bufferedReader.readLine()) != null) {
 
-				chunkRent.add(new Chunk(Integer.valueOf(read), this));
+				chunkRent.add(new Chunk(Integer.valueOf(read),this));
 				// chunkRent.get(Integer.valueOf(read)).getInstance().start();
 			}
 
@@ -110,15 +113,15 @@ public class Slave {
 		return true;
 	}
 
-	public void chunkOption(String option, int chunkid, int offset, int len, String content)
+	public void chunkOption(String option, int chunkid, int offset, int len, String content,DataOutputStream out)
 			throws InterruptedException {
 		for (int i = 0; i < chunkRent.size(); i++) {
 			if (chunkRent.get(i).chunkId == chunkid) {
 
 				if (option.equals("write"))
-					chunkRent.get(i).WRchunk(option, offset, len, content);
+					chunkRent.get(i).WRchunk(option, offset, len, content,out);
 				else
-					chunkRent.get(i).WRchunk(option, offset, len, "");
+					chunkRent.get(i).WRchunk(option, offset, len, "",out);
 				break;
 			}
 		}
