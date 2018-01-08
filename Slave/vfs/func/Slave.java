@@ -243,7 +243,7 @@ public class Slave {
 	}
 
 	public byte[] readChunk(int chunkid, int offset, int readLen) throws IOException {
-		byte[] buffer = new byte[readLen];
+		byte[] buffer = new byte[CHUNK_SIZE];
 		for (int i = 0; i < chunkInfoList.size(); i++) {
 			ChunkInfo chunkInfo = chunkInfoList.get(i);
 			if (chunkInfo.chunkId == chunkid) {

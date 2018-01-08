@@ -97,7 +97,7 @@ public class Chunk {
 					SlaveServer.signWrite = "OK";
 					break;
 				case READ:
-					status = "comp";
+					status = "read";
 					
 
 					break;

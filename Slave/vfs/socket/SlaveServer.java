@@ -193,14 +193,14 @@ public class SlaveServer {
 			int offset = input.readInt();// offset
 			int readlen = input.readInt();// readlen
 
-			byte[] content = null;
+			byte[] content = new byte[Slave.CHUNK_SIZE];
 
-			signRead = "";
+			
 
 			slave.chunkOption("read", chunkid, offset, readlen, "",out);
-			while (!slave.getChunkStatus(chunkid).equals("comp"))
+			while (!slave.getChunkStatus(chunkid).equals("read"))
 				;
-			if (slave.getChunkStatus(chunkid).equals("comp")) {
+			if (slave.getChunkStatus(chunkid).equals("read")) {
 				content = slave.readChunk(chunkid, offset, readlen);
 			}
 			slave.changeChunkStatus(chunkid);
@@ -217,7 +217,7 @@ public class SlaveServer {
 
 //			out.writeInt(readlen);
 
-			int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
+			int bufferSize = Slave.DOWNLOAD_BUFFER_SIZE;
 			byte[] contentBuff = new byte[bufferSize];
 			int contentCount = 0;
 			while (contentCount < readlen) {
