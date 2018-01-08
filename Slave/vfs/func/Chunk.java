@@ -19,7 +19,7 @@ public class Chunk {
 	public List<ChunkInfo> copyids;
 	public List<Integer> offset;
 	public List<Integer> len;
-	public List<String> content;
+	public List<byte []> content;
 	public List<String> option;
 	public static final String WRITE = "write";
 	public static final String READ = "read";
@@ -35,7 +35,7 @@ public class Chunk {
 		copyids = new ArrayList<ChunkInfo>();
 		offset = new ArrayList<Integer>();
 		len = new ArrayList<Integer>();
-		content = new ArrayList<String>();
+		content = new ArrayList<byte []>();
 		option = new ArrayList<String>();
 		slave = _slave;
 		// queue.getInstance().start();
@@ -46,7 +46,7 @@ public class Chunk {
 	
 	
 
-	public void WRchunk(String _option, int _offset, int _len, String _content,DataOutputStream _out) throws InterruptedException {
+	public void WRchunk(String _option, int _offset, int _len, byte[] _content,DataOutputStream _out) throws InterruptedException {
 		// queue.getInstance().start();
 		
 		System.out.println("chunk put data");

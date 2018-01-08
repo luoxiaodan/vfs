@@ -14,6 +14,7 @@ import org.json.JSONObject;
 
 import vfs.func.Slave;
 import vfs.func.SocketUtil;
+import vfs.func.myInt;
 import vfs.struct.VSFProtocols;
 
 public class SlaveServer {
@@ -161,8 +162,8 @@ public class SlaveServer {
 			int chunkid = input.readInt();// chunk_id
 			int offset = input.readInt();// offset
 			int writelen = input.readInt();// writelen
-			String contentBuff = "";
-
+			
+            byte[] contentBuff=new byte[Slave.CHUNK_SIZE];
 			int contentCount = 0;
 			byte[] tempBuf = new byte[Slave.UPLOAD_BUFFER_SIZE];
 
@@ -172,7 +173,9 @@ public class SlaveServer {
 				}
 				int cRead = Math.min(writelen - contentCount, tempBuf.length);
 				int aRead = input.read(tempBuf, 0, cRead);
-				contentBuff += new String(tempBuf);
+				for(int i = 0 ; i < aRead ; i++) {
+				contentBuff[i+contentCount] =tempBuf[i];
+				}
 				contentCount += aRead;
 			}
 
@@ -196,23 +199,18 @@ public class SlaveServer {
 			byte[] content = new byte[Slave.CHUNK_SIZE];
 
 			
-
-			slave.chunkOption("read", chunkid, offset, readlen, "",out);
+			myInt mylen=new myInt(0);
+			slave.chunkOption("read", chunkid, offset, readlen,null,out);
 			while (!slave.getChunkStatus(chunkid).equals("read"))
 				;
 			if (slave.getChunkStatus(chunkid).equals("read")) {
-				content = slave.readChunk(chunkid, offset, readlen);
+				content = slave.readChunk(chunkid, offset, readlen,mylen);
 			}
 			slave.changeChunkStatus(chunkid);
 			SocketUtil.responesClient(out, "OK");
+			int len=mylen.getX();
 
-			int len = 0;
-			for (int i = 0; i < content.length; ++i) {
-				if (content[i] == '\0') {
-					len = i;
-					break;
-				}
-			}
+//			if(len!=readlen);
 			out.writeInt(len);
 
 //			out.writeInt(readlen);

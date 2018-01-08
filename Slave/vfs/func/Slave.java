@@ -113,7 +113,7 @@ public class Slave {
 		return true;
 	}
 
-	public void chunkOption(String option, int chunkid, int offset, int len, String content,DataOutputStream out)
+	public void chunkOption(String option, int chunkid, int offset, int len, byte[] content,DataOutputStream out)
 			throws InterruptedException {
 		for (int i = 0; i < chunkRent.size(); i++) {
 			if (chunkRent.get(i).chunkId == chunkid) {
@@ -121,7 +121,7 @@ public class Slave {
 				if (option.equals("write"))
 					chunkRent.get(i).WRchunk(option, offset, len, content,out);
 				else
-					chunkRent.get(i).WRchunk(option, offset, len, "",out);
+					chunkRent.get(i).WRchunk(option, offset, len, null,out);
 				break;
 			}
 		}
@@ -207,24 +207,31 @@ public class Slave {
 			ChunkInfo chunkInfo = chunkInfoList.get(i);
 			if (chunkInfo.chunkId == chunkid) {
 				chunkInfoList.remove(i);
+				String contentPath = "E:\\content" + Integer.toString(chunkid);
+				File chunfile=new File(contentPath);
+				if (chunfile.exists()) {
+					chunfile.delete();
+				}
+				flagchunk = true;
 				for (int j = 0; j < chunkRent.size(); j++) {
 					if (chunkRent.get(j).chunkId == chunkid) {
-						for (int k = 0; k <= chunkRent.get(j).copyids.size(); k++) {
+					/*	for (int k = 0; k <= chunkRent.get(j).copyids.size(); k++) {
 							ChunkInfo copy = chunkRent.get(j).copyids.get(k);
 							flagchunk = SocketUtil.deleteCopyChunk(copy.slaveIP, copy.port, copy.chunkId);
 							if (!flagchunk) {
 								System.out.println("delete copy chunk error,copyid :" + copy.chunkId);
 							}
-						}
-						flagchunk = true;
+						}*/
+						
 						chunkRent.get(j).close = true;
-						chunkRent.remove(chunkid);
+						chunkRent.remove(j);
 						break;
 					}
 				}
+				break;
 			}
 
-			break;
+			
 		}
 
 		if (flagchunk) {
@@ -242,8 +249,9 @@ public class Slave {
 
 	}
 
-	public byte[] readChunk(int chunkid, int offset, int readLen) throws IOException {
+	public byte[] readChunk(int chunkid, int offset, int readLen,myInt len) throws IOException {
 		byte[] buffer = new byte[CHUNK_SIZE];
+		
 		for (int i = 0; i < chunkInfoList.size(); i++) {
 			ChunkInfo chunkInfo = chunkInfoList.get(i);
 			if (chunkInfo.chunkId == chunkid) {
@@ -253,7 +261,8 @@ public class Slave {
 				if (fileName.exists()) {
 					FileInputStream in = new FileInputStream(contentPath);
 
-					in.read(buffer, offset, readLen);
+					len.setX(in.read(buffer, offset, readLen));
+				
 
 					in.close();
 					for (int j = 0; j < chunkRent.size(); j++) {
@@ -272,7 +281,7 @@ public class Slave {
 		return buffer;
 	}
 
-	public boolean writeChunk(int chunkid, int offset, int writeLen, String content) {
+	public boolean writeChunk(int chunkid, int offset, int writeLen, byte[] content) {
 		boolean flag = false;
 		String contentPath = "E:\\content" + Integer.toString(chunkid);
 		try {
@@ -283,7 +292,7 @@ public class Slave {
 			}
 			FileOutputStream out = new FileOutputStream(contentPath);
 
-			out.write(content.getBytes(), offset, content.getBytes().length);
+			out.write(content, offset, content.length);
 			out.close();
 
 		} catch (Exception e) {

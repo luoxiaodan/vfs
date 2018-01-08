@@ -134,7 +134,7 @@ public class SocketUtil {
 		return flag;
 	}
 
-	public static boolean writeCopyChunk(String Slave_IP, int port, int chunkid, int offset, int len, String content)
+	public static boolean writeCopyChunk(String Slave_IP, int port, int chunkid, int offset, int len, byte[] content)
 			throws UnknownHostException, IOException {
 		boolean flag = false;
 		Socket socket = new Socket(Slave_IP, port);
@@ -145,9 +145,9 @@ public class SocketUtil {
 		out.writeInt(offset);
 		out.writeInt(len);
 		byte[] chunkBuf = new byte[Slave.CHUNK_SIZE];
-		byte[] buf = content.getBytes();
-		for(int i = 0; i < buf.length; ++i){
-			chunkBuf[i] = buf[i];
+		
+		for(int i = 0; i < content.length; ++i){
+			chunkBuf[i] = content[i];
 		}
 		int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
 		byte[] contentBuff = new byte[bufferSize];
