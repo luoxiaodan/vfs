@@ -220,8 +220,8 @@ public class SlaveServer {
 			int bufferSize = Slave.DOWNLOAD_BUFFER_SIZE;
 			byte[] contentBuff = new byte[bufferSize];
 			int contentCount = 0;
-			while (contentCount < readlen) {
-				int writeNum = Math.min(bufferSize, readlen - contentCount);
+			while (contentCount < len) {
+				int writeNum = Math.min(bufferSize, len - contentCount);
 				for (int i = 0; i < bufferSize; ++i) {
 					contentBuff[i] = content[contentCount + i];
 				}
