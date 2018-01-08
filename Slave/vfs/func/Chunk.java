@@ -80,6 +80,7 @@ public class Chunk {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
+						lastSendTime = System.currentTimeMillis();
 					}
 				}
 
