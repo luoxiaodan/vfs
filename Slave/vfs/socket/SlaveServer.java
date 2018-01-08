@@ -124,7 +124,7 @@ public class SlaveServer {
 				case VSFProtocols.RELEASE_CHUNK:
 					SocketUtil.deleteChunk(out, input, slave);
 					break;
-				case VSFProtocols.HEART_BEAT_DETECT_TO_MASTER:
+				case VSFProtocols.HEART_BEAT_DETECT_TO_SLAVE:
 					SocketUtil.sendHeartMessage(out);
 					break;
 				case VSFProtocols.ASSIGN_MAIN_CHUNK:
