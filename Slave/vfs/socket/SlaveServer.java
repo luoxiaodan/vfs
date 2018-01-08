@@ -107,21 +107,26 @@ public class SlaveServer {
 
 				switch (Integer.valueOf(protocols)) {
 				case VSFProtocols.WRITE_CHUNK:
+					System.out.println("recive write chunk");
 					writeChunk(out, input, false);
 					break;
 
 				case VSFProtocols.READ_CHUNK:
+					System.out.println("recive read chunk");
 					readChunk(out);
 					break;
 
 				case VSFProtocols.INITIALIZE_CHUNK_INFO:// chunkinfo
+					System.out.println("recive get chunkinfo");
 					SocketUtil.getChunkInfo(out, slave);
 					break;
 
 				case VSFProtocols.NEW_CHUNK:// createchunk
+					System.out.println("recive create chunk");
 					SocketUtil.createChunk(out, input, slave);
 					break;
 				case VSFProtocols.RELEASE_CHUNK:
+					System.out.println("recive delete chunk");
 					SocketUtil.deleteChunk(out, input, slave);
 					break;
 				case VSFProtocols.HEART_BEAT_DETECT_TO_SLAVE:
@@ -131,9 +136,11 @@ public class SlaveServer {
 					SocketUtil.iniChunk(out, input, slave);
 					break;
 				case VSFProtocols.WRITE_COPY:
+					System.out.println("recive write chunkcopy");
 					writeChunk(out, input, true);
 					break;
 				case VSFProtocols.CREATE_COPY:
+					System.out.println("recive create chunkcopy");
 					SocketUtil.createCopyChunk(out, input, slave);
 					break;
 

@@ -49,7 +49,7 @@ public class SocketUtil {
 
 	public static void responesClient(DataOutputStream out, String content) throws IOException {
 		out.writeUTF(content);
-		System.out.println("response to client: " + content);
+		System.out.println("response to : " + content);
 
 	}
 

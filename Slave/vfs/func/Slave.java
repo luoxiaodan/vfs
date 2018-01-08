@@ -117,7 +117,7 @@ public class Slave {
 			throws InterruptedException {
 		for (int i = 0; i < chunkRent.size(); i++) {
 			if (chunkRent.get(i).chunkId == chunkid) {
-
+				System.out.println("put chunk option");
 				if (option.equals("write"))
 					chunkRent.get(i).WRchunk(option, offset, len, content,out);
 				else

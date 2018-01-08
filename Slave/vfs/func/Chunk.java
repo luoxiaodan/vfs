@@ -90,9 +90,9 @@ public class Chunk {
 				}
 
 				if (option.size() > 0) {
-
+					System.out.println("option size > 0");
 					if (status.equals("idle")) {
-						System.out.println("size :" + Chunk.this.option.size());
+						System.out.println("chunk work :" + Chunk.this.option.get(0));
 						status = "comp";
 						String _option = option.get(0);
 						switch (_option) {
