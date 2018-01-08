@@ -39,7 +39,7 @@ public class SlaveServer {
 			// new Thread(new KeepHeart()).start();
 			// =======================test===============
 			// new Thread(new KeepHeart()).start();//heartmessage
-			 slave.chunkOption("write", 1, 0, 2, "23",new DataOutputStream(new Socket("localhost",8888).getOutputStream()));
+//			 slave.chunkOption("write", 1, 0, 2, "23",new DataOutputStream(new Socket("localhost",8888).getOutputStream()));
 			/*
 			 * slave.chunkOption("write", 1, 0, 2, "23"); slave.chunkOption("write", 1, 0,
 			 * 2, "23"); slave.chunkOption("read", 1, 0, 2, "");
@@ -198,9 +198,9 @@ public class SlaveServer {
 			signRead = "";
 
 			slave.chunkOption("read", chunkid, offset, readlen, "",out);
-			while (!slave.getChunkStatus(chunkid).equals("idle"))
+			while (!slave.getChunkStatus(chunkid).equals("comp"))
 				;
-			if (slave.getChunkStatus(chunkid).equals("idle")) {
+			if (slave.getChunkStatus(chunkid).equals("comp")) {
 				content = slave.readChunk(chunkid, offset, readlen);
 			}
 			slave.changeChunkStatus(chunkid);
@@ -215,7 +215,7 @@ public class SlaveServer {
 			}
 			out.writeInt(len);
 
-			out.writeInt(readlen);
+//			out.writeInt(readlen);
 
 			int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
 			byte[] contentBuff = new byte[bufferSize];
