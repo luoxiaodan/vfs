@@ -144,14 +144,18 @@ public class SocketUtil {
 		out.writeInt(chunkid);
 		out.writeInt(offset);
 		out.writeInt(len);
+		byte[] chunkBuf = new byte[Slave.CHUNK_SIZE];
 		byte[] buf = content.getBytes();
+		for(int i = 0; i < buf.length; ++i){
+			chunkBuf[i] = buf[i];
+		}
 		int bufferSize = Slave.UPLOAD_BUFFER_SIZE;
 		byte[] contentBuff = new byte[bufferSize];
 		int contentCount = 0;
 		while (contentCount < len) {
 			int writeNum = Math.min(bufferSize, len - contentCount);
 			for (int i = 0; i < bufferSize; ++i) {
-				contentBuff[i] = buf[contentCount + i];
+				contentBuff[i] = chunkBuf[contentCount + i];
 			}
 			out.write(contentBuff, 0, writeNum);
 			out.flush();
