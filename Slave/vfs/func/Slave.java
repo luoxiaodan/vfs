@@ -261,9 +261,12 @@ public class Slave {
 				if (fileName.exists()) {
 					FileInputStream in = new FileInputStream(contentPath);
 
-					len.setX(in.read(buffer, offset, readLen));
+					long acutalOff = in.skip(offset);//.read(buffer, 0, offset);
+					if(acutalOff != offset) {
+						System.out.println("bad offset from client");
+					}
+					len.setX(in.read(buffer, 0, readLen));
 				
-
 					in.close();
 					for (int j = 0; j < chunkRent.size(); j++) {
 						if (chunkRent.get(j).chunkId == chunkid) {
