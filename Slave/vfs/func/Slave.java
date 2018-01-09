@@ -292,7 +292,7 @@ public class Slave {
 			}
 			FileOutputStream out = new FileOutputStream(contentPath);
 
-			out.write(content, offset, content.length);
+			out.write(content, offset, writeLen);
 			out.close();
 
 		} catch (Exception e) {
