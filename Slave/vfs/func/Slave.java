@@ -22,9 +22,9 @@ public class Slave {
 
 	public List<ChunkInfo> chunkInfoList = new ArrayList<ChunkInfo>();
 	public List<Chunk> chunkRent = new ArrayList<Chunk>();
-	public static final String CHUNK_LOG = "E:\\chunklog.txt";
-	public static final String CHUNK_RENT = "E:\\chunkRentlog.txt";
 	public static final int CHUNK_SIZE = 64 * 1024; // *1024;
+	public static final String CHUNK_LOG = "vfs_data/chunklog.txt";
+	public static final String CHUNK_RENT = "vfs_data/chunkRentlog.txt";
 	public static final int UPLOAD_BUFFER_SIZE = 8 * 1024;
 	public static final int DOWNLOAD_BUFFER_SIZE = 8 * 1024;
 	public static final int SLAVE_PORT = 8888;
@@ -208,6 +208,7 @@ public class Slave {
 			if (chunkInfo.chunkId == chunkid) {
 				chunkInfoList.remove(i);
 				String contentPath = "E:\\content" + Integer.toString(chunkid);
+				String contentPath = "vfs_data/content" + Integer.toString(chunkid);
 				File chunfile=new File(contentPath);
 				if (chunfile.exists()) {
 					chunfile.delete();
@@ -257,6 +258,7 @@ public class Slave {
 			if (chunkInfo.chunkId == chunkid) {
 
 				String contentPath = "E:\\content" + Integer.toString(chunkid);
+				String contentPath = "vfs_data/content" + Integer.toString(chunkid);
 				File fileName = new File(contentPath);
 				if (fileName.exists()) {
 					FileInputStream in = new FileInputStream(contentPath);
@@ -287,6 +289,7 @@ public class Slave {
 	public boolean writeChunk(int chunkid, int offset, int writeLen, byte[] content) {
 		boolean flag = false;
 		String contentPath = "E:\\content" + Integer.toString(chunkid);
+		String contentPath = "vfs_data/content" + Integer.toString(chunkid);
 		try {
 			File fileName = new File(contentPath);
 			if (!fileName.exists()) {
